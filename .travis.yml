@@ -1,0 +1,17 @@
+language: node_js
+node_js:
+  - stable
+install:
+  - npm ci
+script:
+  - npm test
+after_script:
+  - npm run cover
+
+deploy:
+  provider: npm
+  email: $NPM_EMAIL
+  api_key: $NPM_API_KEY
+  skip_cleanup: true
+  on:
+    tags: true

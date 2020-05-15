@@ -1,0 +1,29 @@
+{
+  "name": "tricklejs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "prepublish": "npm run start",
+  "scripts": {
+    "start": "npm run clean:dist && tsc",
+    "docs": "npm run clean:docs && typedoc src",
+    "test": "jest",
+    "coverage": "jest --coverage",
+    "watch-test": "jest --watchAll",
+    "clean:dist": "rimraf ./dist",
+    "clean:docs": "rimraf ./docs",
+    "clean": "npm run clean:dist && npm run clean:docs",
+    "cover": "jest --coverage --coverageReporters=text-lcov | coveralls"
+  },
+  "author": "Vincent Cheung",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/jest": "^25.2.2",
+    "jest": "^26.0.1",
+    "rimraf": "^3.0.2",
+    "ts-jest": "^25.5.1",
+    "typedoc": "^0.17.6",
+    "typescript": "^3.9.2"
+  }
+}
