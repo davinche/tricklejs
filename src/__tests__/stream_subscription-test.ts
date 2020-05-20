@@ -6,6 +6,7 @@ import {
   createDoneMessage,
 } from "../stream_utils";
 jest.mock("../stream");
+(Stream as any).mockImplementation(() => "Stream");
 
 describe("Stream Subscription", () => {
   let stream: Stream<any>;
