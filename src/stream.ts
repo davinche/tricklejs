@@ -6,7 +6,7 @@ import {
   StreamMessageType,
   StreamMessage,
   StreamListener,
-  StreamListenCallbacks,
+  StreamListenOptions,
   StreamCallback,
   StreamInterface,
 } from "./types";
@@ -173,7 +173,7 @@ export default class Stream<T> implements StreamInterface<T> {
    */
   listen(
     onData: StreamListener<T>,
-    callbacks: StreamListenCallbacks = {}
+    callbacks: StreamListenOptions = {}
   ): StreamSubscriptionActions {
     if (this._subscription) {
       throw ErrorForListen;
@@ -594,7 +594,7 @@ class _broadcastStream<T> extends Stream<T> {
 
   listen(
     onData: StreamListener<T>,
-    callbacks: StreamListenCallbacks = {}
+    callbacks: StreamListenOptions = {}
   ): StreamSubscriptionActions {
     if (!this._parentSubscription) {
       this._parentSubscription = this.parent.listen(this.add.bind(this), {
@@ -630,7 +630,7 @@ class _filteringStream extends Stream<any> {
 
   listen(
     onData: StreamListener<any>,
-    callbacks: StreamListenCallbacks = {}
+    callbacks: StreamListenOptions = {}
   ): StreamSubscriptionActions {
     if (!this._sub) {
       this._sub = this.parent.listen(this.add.bind(this), {

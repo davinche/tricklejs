@@ -95,42 +95,6 @@ describe("Stream", () => {
   });
 
   describe("pause", () => {
-    // note: this should be refactored out of stream test and into stream_subscription test
-    it("calls the onPause callback", () => {
-      const onPause = jest.fn();
-      const sub = stream.listen(() => {}, { onPause });
-      sub.pause();
-      expect(onPause).toHaveBeenCalled();
-    });
-
-    // note: this should be refactored out of stream test and into stream_subscription test
-    it("does not call the onPause callback if it is already paused", () => {
-      const onPause = jest.fn();
-      const sub = stream.listen(() => {}, { onPause });
-      sub.pause();
-      onPause.mockClear();
-      sub.pause();
-      expect(onPause).not.toHaveBeenCalled();
-    });
-
-    // note: this should be refactored out of stream test and into stream_subscription test
-    it("has the correct paused status", async () => {
-      const sub = stream.listen(() => {});
-      sub.pause();
-      await flush();
-      expect((sub as StreamSubscription<any>).isPaused).toBe(true);
-    });
-
-    // note: this should be refactored out of stream test and into stream_subscription test
-    it("prevents the listener from being called", async () => {
-      const fn = jest.fn();
-      const sub = stream.listen(fn);
-      sub.pause();
-      stream.add("ok");
-      await flush();
-      expect(fn).not.toHaveBeenCalled();
-    });
-
     it("calls the onPause event listener if the stream is not paused", async () => {
       const onPause = jest.fn();
       stream.addEventListener("onPause", onPause);
@@ -152,40 +116,6 @@ describe("Stream", () => {
   });
 
   describe("resume", () => {
-    // note: this should be refactored out of stream test and into stream_subscription test
-    it("does not call the onResume callback if it is not paused", () => {
-      const onResume = jest.fn();
-      const sub = stream.listen(() => {}, { onResume });
-      sub.resume();
-      expect(onResume).not.toHaveBeenCalled();
-    });
-
-    // note: this should be refactored out of stream test and into stream_subscription test
-    it("calls the onResume callback if it is paused", () => {
-      const onResume = jest.fn();
-      const sub = stream.listen(() => {}, { onResume });
-      sub.pause();
-      sub.resume();
-      expect(onResume).toHaveBeenCalled();
-    });
-
-    // note: this should be refactored out of stream test and into stream_subscription test
-    it("buffers messages when paused and calls the listener with buffered messages on resume", async () => {
-      const fn = jest.fn();
-      const sub = stream.listen(fn);
-      stream.add("foo");
-      await flush();
-      sub.pause();
-      stream.add("bar");
-      stream.add("baz");
-      sub.resume();
-      await flush();
-      expect(fn).toHaveBeenCalledTimes(3);
-      ["foo", "bar", "baz"].forEach((m, i) => {
-        expect(fn.mock.calls[i][0]).toBe(m);
-      });
-    });
-
     it("calls the onResume event listener if the stream is paused", async () => {
       stream.pause();
       await flush();

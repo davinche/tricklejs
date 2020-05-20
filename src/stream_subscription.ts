@@ -1,6 +1,6 @@
 import {
   StreamListener,
-  StreamListenCallbacks,
+  StreamListenOptions,
   StreamMessage,
   StreamMessageType,
 } from "./types";
@@ -21,7 +21,7 @@ export default class StreamSubscription<T>
   constructor(
     private stream: Stream<T>,
     private onData: StreamListener<T>,
-    private callbacks: StreamListenCallbacks = {}
+    private listenOptions: StreamListenOptions = {}
   ) {}
 
   private _emit() {
@@ -32,13 +32,16 @@ export default class StreamSubscription<T>
           this.onData(m.data);
           break;
         case StreamMessageType.Error:
-          if (this.callbacks.onError) {
-            this.callbacks.onError(m.data);
+          if (this.listenOptions.onError) {
+            this.listenOptions.onError(m.data);
+          }
+          if (this.listenOptions.cancelOnError) {
+            this.cancel();
           }
           break;
         case StreamMessageType.Done:
-          if (this.callbacks.onDone) {
-            this.callbacks.onDone();
+          if (this.listenOptions.onDone) {
+            this.listenOptions.onDone();
           }
           break;
       }
@@ -54,8 +57,8 @@ export default class StreamSubscription<T>
   pause() {
     if (!this._isPaused) {
       this._isPaused = true;
-      if (this.callbacks.onPause) {
-        this.callbacks.onPause();
+      if (this.listenOptions.onPause) {
+        this.listenOptions.onPause();
       }
       this.stream.pause();
     }
@@ -64,8 +67,8 @@ export default class StreamSubscription<T>
   resume() {
     if (this._isPaused) {
       this._isPaused = false;
-      if (this.callbacks.onResume) {
-        this.callbacks.onResume();
+      if (this.listenOptions.onResume) {
+        this.listenOptions.onResume();
       }
       this.stream.resume();
       this._emit();

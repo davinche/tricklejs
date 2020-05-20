@@ -3,7 +3,7 @@ import { StreamSubscriptionActions } from "./stream_subscription";
 export interface StreamInterface<T> {
   listen(
     onData: StreamListener<T>,
-    callbacks?: StreamListenCallbacks
+    callbacks?: StreamListenOptions
   ): StreamSubscriptionActions;
   asBroadcastStream(): StreamInterface<T>;
   every(condition: (data: T) => boolean): Promise<boolean>;
@@ -87,11 +87,12 @@ export interface StreamCallback {
 }
 
 /**
- * StreamListenCallbacks - the optional callbacks when listening to a stream
+ * StreamListenOptions - the optional callbacks when listening to a stream
  */
-export interface StreamListenCallbacks {
+export interface StreamListenOptions {
   onError?: StreamErrorListener;
   onDone?: StreamCallback;
   onPause?: StreamCallback;
   onResume?: StreamCallback;
+  cancelOnError?: boolean;
 }
