@@ -4,7 +4,7 @@
   "description": "",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "prepublish": "npm run start",
+  "prepublish": "npm start",
   "scripts": {
     "start": "npm run clean:dist && tsc",
     "docs": "npm run clean:docs && typedoc src",
