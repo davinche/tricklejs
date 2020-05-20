@@ -51,32 +51,34 @@ export default class StreamController<T> {
   private _dstStream: Stream<T>;
   private _sink: _streamSink<T>;
   private _streamProxy: StreamInterface<T>;
+  private _done: Promise<void> = Promise.resolve();
 
   onListen: StreamCallback | undefined;
   onPause: StreamCallback | undefined;
   onResume: StreamCallback | undefined;
   onCancel: StreamCallback | undefined;
 
-  private _onListen() {
+  private _onListen = () => {
     if (this.onListen) {
       this.onListen();
     }
-  }
-  private _onPause() {
+  };
+  private _onPause = () => {
     if (this.onPause) {
       this.onPause();
     }
-  }
-  private _onResume() {
+  };
+  private _onResume = () => {
     if (this.onResume) {
       this.onResume();
     }
-  }
-  private _onCancel() {
+  };
+
+  private _onCancel = () => {
     if (this.onCancel) {
       this.onCancel();
     }
-  }
+  };
 
   /**
    * StreamController Constructor
@@ -89,7 +91,7 @@ export default class StreamController<T> {
    */
   constructor(params: constructorParams = { broadcast: false }) {
     this._srcStream = new Stream<T>();
-    this._sink = new _streamSink(this._srcStream);
+    this._sink = new _streamSink(this);
     if (params.broadcast) {
       this._dstStream = this._srcStream.asBroadcastStream() as Stream<T>;
     } else {
@@ -100,17 +102,36 @@ export default class StreamController<T> {
     this.onPause = params.onPause;
     this.onResume = params.onResume;
     this.onCancel = params.onCancel;
-    this._dstStream.addEventListener("onListen", this._onListen.bind(this));
-    this._dstStream.addEventListener("onPause", this._onPause.bind(this));
-    this._dstStream.addEventListener("onResume", this._onResume.bind(this));
-    this._dstStream.addEventListener("onCancel", this._onCancel.bind(this));
+    this._dstStream.addEventListener("onListen", this._onListen);
+    this._dstStream.addEventListener("onPause", this._onPause);
+    this._dstStream.addEventListener("onResume", this._onResume);
+    this._dstStream.addEventListener("onCancel", this._onCancel);
   }
+
   add(data: T) {
     this._srcStream.add(data);
   }
 
   addError(error: string | Error) {
     this._srcStream.addError(error);
+  }
+
+  addStream(
+    stream: StreamInterface<T>,
+    options = { cancelOnError: false }
+  ): Promise<void> {
+    const p = new Promise<void>((resolve) => {
+      stream.listen(this.add.bind(this), {
+        onDone: resolve,
+        onError: (e) => {
+          this.addError(e);
+          if (options.cancelOnError) resolve();
+        },
+        cancelOnError: options.cancelOnError,
+      });
+    });
+    this._done = p;
+    return p;
   }
 
   close() {
@@ -125,12 +146,16 @@ export default class StreamController<T> {
     return this._sink;
   }
 
-  get isPaused() {
+  get isPaused(): boolean {
     return this._srcStream.isPaused;
   }
 
-  get isClosed() {
+  get isClosed(): boolean {
     return this._srcStream.isClosed;
+  }
+
+  get done(): Promise<void> {
+    return this._done;
   }
 
   static broadcast<T>(): StreamController<T> {
@@ -144,16 +169,27 @@ export default class StreamController<T> {
  */
 /** @ignore */
 class _streamSink<T> {
-  constructor(private _stream: Stream<T>) {}
+  constructor(private _streamController: StreamController<T>) {}
   add(data: T) {
-    this._stream.add(data);
+    this._streamController.add(data);
   }
 
   addError(error: string | Error) {
-    this._stream.addError(error);
+    this._streamController.addError(error);
+  }
+
+  addStream(
+    stream: StreamInterface<T>,
+    options = { cancelOnError: false }
+  ): Promise<void> {
+    return this._streamController.addStream(stream, options);
   }
 
   close() {
-    this._stream.close();
+    this._streamController.close();
+  }
+
+  get done() {
+    return this._streamController.done;
   }
 }

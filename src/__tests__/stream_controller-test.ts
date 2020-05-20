@@ -1,4 +1,5 @@
 import StreamController from "../stream_controller";
+import Stream from "../stream";
 const flush = () => new Promise(setImmediate);
 
 describe("StreamController", () => {
@@ -44,6 +45,66 @@ describe("StreamController", () => {
       await flush();
       expect(onError).toHaveBeenCalled();
       expect(onError.mock.calls[0][0].message).toBe("bar");
+    });
+  });
+
+  describe("addStream", () => {
+    it("consumes another stream and adds it to the current stream", async () => {
+      const listener = jest.fn();
+      const onError = jest.fn();
+      streamController.stream.listen(listener, { onError });
+      const toConsume = new Stream<any>();
+      const expectedData = ["a", "b", "c"];
+      const expectedErrors = ["easy as", "123"];
+      expectedData.forEach((d) => toConsume.add(d));
+      expectedErrors.forEach((e) => toConsume.addError(e));
+      toConsume.close();
+      streamController.addStream(toConsume);
+      await flush();
+      expect(listener).toHaveBeenCalledTimes(3);
+      expect(onError).toHaveBeenCalledTimes(2);
+      expectedData.forEach((d, index) =>
+        expect(listener.mock.calls[index][0]).toBe(d)
+      );
+      expectedErrors.forEach((e, index) =>
+        expect(onError.mock.calls[index][0].message).toBe(e)
+      );
+    });
+
+    it("resolves the done property after adding the stream", (done) => {
+      const listener = jest.fn();
+      const toConsume = new Stream<any>();
+      const data = ["a", "b", "c"];
+      data.forEach((d) => toConsume.add(d));
+      toConsume.close();
+      streamController.addStream(toConsume);
+      streamController.stream.listen(listener);
+      expect.assertions(1);
+      streamController.done.then(() => {
+        expect(listener).toHaveBeenCalledTimes(3);
+        done();
+      });
+    });
+
+    it("only stops consuming the stream if an error occurs and cancelOnError is true", async () => {
+      const listener = jest.fn();
+      const onError = jest.fn();
+      streamController.stream.listen(listener, {
+        onError,
+        cancelOnError: true,
+      });
+      const toConsume = new Stream<any>();
+      toConsume.add("a");
+      toConsume.addError("1");
+      toConsume.add("b");
+      toConsume.add("c");
+      toConsume.addError("2");
+      toConsume.addError("3");
+      toConsume.close();
+      streamController.addStream(toConsume);
+      await flush();
+      expect(listener).toHaveBeenCalledTimes(1);
+      expect(onError).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -147,6 +208,20 @@ describe("StreamController", () => {
       streamController.sink.close();
       await flush();
       expect(onDone).toHaveBeenCalledWith();
+    });
+
+    it("returns an object that can consume another stream", (done) => {
+      const listener = jest.fn();
+      const toConsume = new Stream<any>();
+      toConsume.add("foo");
+      toConsume.close();
+      streamController.stream.listen(listener);
+      streamController.sink.addStream(toConsume);
+      expect.assertions(1);
+      streamController.sink.done.then(() => {
+        expect(listener).toHaveBeenCalledWith("foo");
+        done();
+      });
     });
   });
 });
