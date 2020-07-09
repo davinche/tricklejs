@@ -188,9 +188,7 @@ describe("Stream", () => {
           listeners.forEach((l: jest.Mock) => broadcast.listen(l));
           stream.add("foo");
           await flush();
-          listeners.forEach((l: jest.Mock) =>
-            expect(l).toHaveBeenCalledWith("foo")
-          );
+          listeners.forEach((l: jest.Mock) => expect(l).toHaveBeenCalledWith("foo"));
         });
 
         it("calls the onListen event listener", async () => {
@@ -204,13 +202,9 @@ describe("Stream", () => {
         it("sends the close message if the stream is closed", async () => {
           const onDones = Array.apply(null, Array(2)).map(jest.fn);
           broadcast.close();
-          onDones.forEach((onDone: jest.Mock) =>
-            broadcast.listen(() => {}, { onDone })
-          );
+          onDones.forEach((onDone: jest.Mock) => broadcast.listen(() => {}, { onDone }));
           await flush();
-          onDones.forEach((onDone: jest.Mock) =>
-            expect(onDone).toHaveBeenCalled()
-          );
+          onDones.forEach((onDone: jest.Mock) => expect(onDone).toHaveBeenCalled());
         });
       });
 
@@ -220,9 +214,7 @@ describe("Stream", () => {
           listeners.forEach((l: jest.Mock) => broadcast.listen(l));
           broadcast.add("foo");
           await flush();
-          listeners.forEach((l: jest.Mock) =>
-            expect(l).toHaveBeenCalledWith("foo")
-          );
+          listeners.forEach((l: jest.Mock) => expect(l).toHaveBeenCalledWith("foo"));
         });
 
         it("does not buffer messages for listeners", async () => {
@@ -249,38 +241,26 @@ describe("Stream", () => {
       describe("addError", () => {
         it("broadcasts errors from the original stream to multiple error handlers", async () => {
           const onErrors = Array.apply(null, Array(2)).map(jest.fn);
-          onErrors.forEach((onError: jest.Mock) =>
-            broadcast.listen(() => {}, { onError })
-          );
+          onErrors.forEach((onError: jest.Mock) => broadcast.listen(() => {}, { onError }));
           stream.addError("foo");
           await flush();
-          onErrors.forEach((onError: jest.Mock) =>
-            expect(onError.mock.calls[0][0].message).toBe("foo")
-          );
+          onErrors.forEach((onError: jest.Mock) => expect(onError.mock.calls[0][0].message).toBe("foo"));
         });
 
         it("broadcasts errors from the original stream to multiple error handlers", async () => {
           const onErrors = Array.apply(null, Array(2)).map(jest.fn);
-          onErrors.forEach((onError: jest.Mock) =>
-            broadcast.listen(() => {}, { onError })
-          );
+          onErrors.forEach((onError: jest.Mock) => broadcast.listen(() => {}, { onError }));
           stream.addError(new Error("foo"));
           await flush();
-          onErrors.forEach((onError: jest.Mock) =>
-            expect(onError.mock.calls[0][0].message).toBe("foo")
-          );
+          onErrors.forEach((onError: jest.Mock) => expect(onError.mock.calls[0][0].message).toBe("foo"));
         });
 
         it("accepts the Error type and broadcasts the error from its own stream to multiple error handlers", async () => {
           const onErrors = Array.apply(null, Array(2)).map(jest.fn);
-          onErrors.forEach((onError: jest.Mock) =>
-            broadcast.listen(() => {}, { onError })
-          );
+          onErrors.forEach((onError: jest.Mock) => broadcast.listen(() => {}, { onError }));
           broadcast.addError(new Error("foo"));
           await flush();
-          onErrors.forEach((onError: jest.Mock) =>
-            expect(onError.mock.calls[0][0].message).toBe("foo")
-          );
+          onErrors.forEach((onError: jest.Mock) => expect(onError.mock.calls[0][0].message).toBe("foo"));
         });
 
         it("throws if the stream is closed", async () => {
@@ -310,11 +290,11 @@ describe("Stream", () => {
           const onError2 = jest.fn();
           broadcast.listen(listen1, {
             onDone: onDone1,
-            onError: onError1,
+            onError: onError1
           });
           const sub = broadcast.listen(listen2, {
             onDone: onDone2,
-            onError: onError2,
+            onError: onError2
           });
           sub.cancel();
           stream.add("foo");
@@ -342,14 +322,10 @@ describe("Stream", () => {
       describe("close", () => {
         it("calls the onDone handlers on close", async () => {
           const onDones = Array.apply(null, Array(2)).map(() => jest.fn());
-          onDones.forEach((onDone: jest.Mock) =>
-            broadcast.listen(() => {}, { onDone })
-          );
+          onDones.forEach((onDone: jest.Mock) => broadcast.listen(() => {}, { onDone }));
           broadcast.close();
           await flush();
-          onDones.forEach((onDone: jest.Mock) =>
-            expect(onDone).toHaveBeenCalled()
-          );
+          onDones.forEach((onDone: jest.Mock) => expect(onDone).toHaveBeenCalled());
         });
 
         it("calls cancel on the parent stream", async () => {
@@ -369,49 +345,43 @@ describe("Stream", () => {
   describe("addEventListener", () => {
     it("adds the event listener to the stream and calls them when the event happens", async () => {
       const events = ["onListen", "onPause", "onResume", "onCancel"];
-      const listeners = events.reduce(
-        (obj: { [key: string]: () => void }, eventName) => {
-          obj[eventName] = jest.fn();
-          return obj;
-        },
-        {}
-      );
+      const listeners = events.reduce((obj: { [key: string]: () => void }, eventName) => {
+        obj[eventName] = jest.fn();
+        return obj;
+      }, {});
 
-      events.forEach((ev) => stream.addEventListener(ev, listeners[ev]));
+      events.forEach(ev => stream.addEventListener(ev, listeners[ev]));
       const sub = stream.listen(() => {});
       sub.pause();
       sub.resume();
       sub.cancel();
       await flush();
-      events.forEach((ev) => expect(listeners[ev]).toHaveBeenCalled());
+      events.forEach(ev => expect(listeners[ev]).toHaveBeenCalled());
     });
   });
 
   describe("removeEventListener", () => {
     it("removes the event listener from the stream", async () => {
       const events = ["onListen", "onPause", "onResume", "onCancel"];
-      const listeners = events.reduce(
-        (obj: { [key: string]: () => void }, eventName) => {
-          obj[eventName] = jest.fn();
-          return obj;
-        },
-        {}
-      );
+      const listeners = events.reduce((obj: { [key: string]: () => void }, eventName) => {
+        obj[eventName] = jest.fn();
+        return obj;
+      }, {});
 
-      events.forEach((ev) => stream.addEventListener(ev, listeners[ev]));
-      events.forEach((ev) => stream.removeEventListener(ev, listeners[ev]));
+      events.forEach(ev => stream.addEventListener(ev, listeners[ev]));
+      events.forEach(ev => stream.removeEventListener(ev, listeners[ev]));
       const sub = stream.listen(() => {});
       sub.pause();
       sub.resume();
       sub.cancel();
       await flush();
-      events.forEach((ev) => expect(listeners[ev]).not.toHaveBeenCalled());
+      events.forEach(ev => expect(listeners[ev]).not.toHaveBeenCalled());
     });
   });
 
   describe("map", () => {
     it("produces mapped values from the initial stream", async () => {
-      const mapped = stream.map((i) => i * i);
+      const mapped = stream.map(i => i * i);
       const listener = jest.fn();
       mapped.listen(listener);
       stream.add(2);
@@ -452,12 +422,10 @@ describe("Stream", () => {
       const listener = jest.fn();
       const takeWhile = stream.takeWhile(condition);
       takeWhile.listen(listener);
-      data.forEach((n) => stream.add(n));
+      data.forEach(n => stream.add(n));
       await flush();
       expect(listener).toHaveBeenCalledTimes(expected.length);
-      expected.forEach((num, index) =>
-        expect(listener.mock.calls[index][0]).toBe(num)
-      );
+      expected.forEach((num, index) => expect(listener.mock.calls[index][0]).toBe(num));
     });
 
     it("stops if the condition throws", async () => {
@@ -472,14 +440,14 @@ describe("Stream", () => {
       const data = expected.concat([3, 4, 5]);
       const stream = new Stream<number>();
       const listener = jest.fn();
+      const onError = jest.fn();
       const takeWhile = stream.takeWhile(condition);
-      takeWhile.listen(listener);
-      data.forEach((n) => stream.add(n));
+      takeWhile.listen(listener, { onError });
+      data.forEach(n => stream.add(n));
       await flush();
       expect(listener).toHaveBeenCalledTimes(expected.length);
-      expected.forEach((num, index) =>
-        expect(listener.mock.calls[index][0]).toBe(num)
-      );
+      expected.forEach((num, index) => expect(listener.mock.calls[index][0]).toBe(num));
+      expect(onError).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -514,12 +482,10 @@ describe("Stream", () => {
       const listener = jest.fn();
       const skipWhile = stream.skipWhile(condition);
       skipWhile.listen(listener);
-      data.forEach((n) => stream.add(n));
+      data.forEach(n => stream.add(n));
       await flush();
       // expect(listener).toHaveBeenCalledTimes(expected.length);
-      expected.forEach((num, index) =>
-        expect(listener.mock.calls[index][0]).toBe(num)
-      );
+      expected.forEach((num, index) => expect(listener.mock.calls[index][0]).toBe(num));
     });
 
     it("stops skipping if the condition throws", async () => {
@@ -531,23 +497,23 @@ describe("Stream", () => {
 
       // should skip the first 5 odd numbers
       const data = [1, 2, 3, 4, 5];
-      const expected = [3, 4, 5];
+      const expected = [4, 5];
       const stream = new Stream<number>();
       const listener = jest.fn();
+      const onError = jest.fn();
       const skipWhile = stream.skipWhile(condition);
-      skipWhile.listen(listener);
-      data.forEach((n) => stream.add(n));
+      skipWhile.listen(listener, { onError });
+      data.forEach(n => stream.add(n));
       await flush();
       // expect(listener).toHaveBeenCalledTimes(expected.length);
-      expected.forEach((num, index) =>
-        expect(listener.mock.calls[index][0]).toBe(num)
-      );
+      expected.forEach((num, index) => expect(listener.mock.calls[index][0]).toBe(num));
+      expect(onError).toHaveBeenCalledTimes(1);
     });
   });
 
   describe("where", () => {
     it("filters out values", async () => {
-      const where = stream.where((n) => n === 5);
+      const where = stream.where(n => n === 5);
       const listener = jest.fn();
       where.listen(listener);
       for (let i = 0; i < 10; i++) {
@@ -652,7 +618,7 @@ describe("Stream", () => {
     it("resolves the first element on the stream matching a condition", async () => {
       const cond = (num: number) => num === 5;
       const data = [1, 3, 5, 7, 9];
-      data.forEach((d) => stream.add(d));
+      data.forEach(d => stream.add(d));
       stream.close();
       const result = await stream.firstWhere(cond);
       expect(result).toBe(5);
@@ -797,7 +763,7 @@ describe("Stream", () => {
   describe("toArray", () => {
     it("returns an array containing the messages from the stream", async () => {
       const expected = [1, 2, 3];
-      expected.forEach((n) => stream.add(n));
+      expected.forEach(n => stream.add(n));
       stream.close();
       await flush();
       const result = await stream.toArray();
@@ -822,12 +788,12 @@ describe("Stream", () => {
   describe("toSet", () => {
     it("returns a Set containing the messages from the stream", async () => {
       const expected = [1, 2, 3];
-      expected.forEach((n) => stream.add(n));
+      expected.forEach(n => stream.add(n));
       stream.close();
       await flush();
       const result = await stream.toSet();
       expect(result.size).toBe(expected.length);
-      expected.forEach((n) => expect(result.has(n)).toBe(true));
+      expected.forEach(n => expect(result.has(n)).toBe(true));
     });
 
     it("rejects with the error from the stream on error", async () => {
