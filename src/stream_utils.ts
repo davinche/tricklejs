@@ -1,4 +1,3 @@
-import Stream from "./stream";
 import { StreamSubscriptionActions } from "./stream_subscription";
 import {
   StreamMessageError,
@@ -20,8 +19,12 @@ export const cancelAndFulfill = function (
 /** @ignore utility for running a function on the next tick **/
 /* istanbul ignore next*/
 export const nextTick = function (fn: () => any) {
-  const nextTick = global?.process?.nextTick || Promise.resolve().then;
-  nextTick(fn);
+  const tick = global?.process?.nextTick;
+  if (!tick) {
+    Promise.resolve().then(fn);
+    return;
+  }
+  tick(fn);
 };
 
 /** @ignore utility for creating a *data* StreamMessage **/
