@@ -370,6 +370,19 @@ export default class Stream<T> implements StreamInterface<T> {
   }
 
   /**
+   * Derives new stream that only passes data from the parent stream if the data does not equal
+   * the previously passed data.
+   *
+   * @param equals - function that checks if two values are the same
+   */
+  distinct(equals?: (oldVal: T|null, newVal: T|null) => boolean): StreamInterface<T> {
+    if (!equals) {
+      equals = (oldVal, newVal) => oldVal === newVal;
+    }
+    return new _distinctStream(this, equals);
+  }
+
+  /**
    * Checks if every message in the stream satisfies a certain condition
    *
    * @param condition
@@ -741,6 +754,31 @@ class _whereStream<T> extends _filteringStream {
   add(data: T) {
     try {
       if (this.condition(data)) {
+        super.add(data);
+      }
+    } catch(e) {
+      super.addError(e);
+    }
+  }
+}
+
+/** @ignore **/
+class _distinctStream<T> extends _filteringStream {
+  private _oldVal: T | null = null;
+
+  /**
+   * distinctStream constructor
+   * @param parent - the parent stream
+   * @param equals - the function that tests if two values are equal
+   */
+  constructor(parent: Stream<T>, private equals: (oldVal: T|null, newVal: T|null) => boolean) {
+    super(parent);
+  }
+
+  add(data: T) {
+    try {
+      if (!this.equals(this._oldVal, data)) {
+        this._oldVal = data
         super.add(data);
       }
     } catch(e) {
