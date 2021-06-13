@@ -290,11 +290,11 @@ describe("Stream", () => {
           const onError2 = jest.fn();
           broadcast.listen(listen1, {
             onDone: onDone1,
-            onError: onError1
+            onError: onError1,
           });
           const sub = broadcast.listen(listen2, {
             onDone: onDone2,
-            onError: onError2
+            onError: onError2,
           });
           sub.cancel();
           stream.add("foo");
@@ -350,13 +350,13 @@ describe("Stream", () => {
         return obj;
       }, {});
 
-      events.forEach(ev => stream.addEventListener(ev, listeners[ev]));
+      events.forEach((ev) => stream.addEventListener(ev, listeners[ev]));
       const sub = stream.listen(() => {});
       sub.pause();
       sub.resume();
       sub.cancel();
       await flush();
-      events.forEach(ev => expect(listeners[ev]).toHaveBeenCalled());
+      events.forEach((ev) => expect(listeners[ev]).toHaveBeenCalled());
     });
   });
 
@@ -368,20 +368,20 @@ describe("Stream", () => {
         return obj;
       }, {});
 
-      events.forEach(ev => stream.addEventListener(ev, listeners[ev]));
-      events.forEach(ev => stream.removeEventListener(ev, listeners[ev]));
+      events.forEach((ev) => stream.addEventListener(ev, listeners[ev]));
+      events.forEach((ev) => stream.removeEventListener(ev, listeners[ev]));
       const sub = stream.listen(() => {});
       sub.pause();
       sub.resume();
       sub.cancel();
       await flush();
-      events.forEach(ev => expect(listeners[ev]).not.toHaveBeenCalled());
+      events.forEach((ev) => expect(listeners[ev]).not.toHaveBeenCalled());
     });
   });
 
   describe("map", () => {
     it("produces mapped values from the initial stream", async () => {
-      const mapped = stream.map(i => i * i);
+      const mapped = stream.map((i) => i * i);
       const listener = jest.fn();
       mapped.listen(listener);
       stream.add(2);
@@ -422,7 +422,7 @@ describe("Stream", () => {
       const listener = jest.fn();
       const takeWhile = stream.takeWhile(condition);
       takeWhile.listen(listener);
-      data.forEach(n => stream.add(n));
+      data.forEach((n) => stream.add(n));
       await flush();
       expect(listener).toHaveBeenCalledTimes(expected.length);
       expected.forEach((num, index) => expect(listener.mock.calls[index][0]).toBe(num));
@@ -443,7 +443,7 @@ describe("Stream", () => {
       const onError = jest.fn();
       const takeWhile = stream.takeWhile(condition);
       takeWhile.listen(listener, { onError });
-      data.forEach(n => stream.add(n));
+      data.forEach((n) => stream.add(n));
       await flush();
       expect(listener).toHaveBeenCalledTimes(expected.length);
       expected.forEach((num, index) => expect(listener.mock.calls[index][0]).toBe(num));
@@ -482,7 +482,7 @@ describe("Stream", () => {
       const listener = jest.fn();
       const skipWhile = stream.skipWhile(condition);
       skipWhile.listen(listener);
-      data.forEach(n => stream.add(n));
+      data.forEach((n) => stream.add(n));
       await flush();
       // expect(listener).toHaveBeenCalledTimes(expected.length);
       expected.forEach((num, index) => expect(listener.mock.calls[index][0]).toBe(num));
@@ -503,7 +503,7 @@ describe("Stream", () => {
       const onError = jest.fn();
       const skipWhile = stream.skipWhile(condition);
       skipWhile.listen(listener, { onError });
-      data.forEach(n => stream.add(n));
+      data.forEach((n) => stream.add(n));
       await flush();
       // expect(listener).toHaveBeenCalledTimes(expected.length);
       expected.forEach((num, index) => expect(listener.mock.calls[index][0]).toBe(num));
@@ -513,7 +513,7 @@ describe("Stream", () => {
 
   describe("where", () => {
     it("filters out values", async () => {
-      const where = stream.where(n => n === 5);
+      const where = stream.where((n) => n === 5);
       const listener = jest.fn();
       where.listen(listener);
       for (let i = 0; i < 10; i++) {
@@ -522,6 +522,42 @@ describe("Stream", () => {
       await flush();
       expect(listener).toHaveBeenCalledTimes(1);
       expect(listener).toHaveBeenCalledWith(5);
+    });
+  });
+
+  describe("distinct", () => {
+    it("skips messages if the message is equal to the previous message", async () => {
+      const distinct = stream.distinct();
+      const listener = jest.fn();
+      distinct.listen(listener);
+      stream.add(1);
+      stream.add(1);
+      await flush();
+      expect(listener).toHaveBeenCalledTimes(1);
+      expect(listener.mock.calls[0][0]).toBe(1);
+    });
+
+    it("passes messages if the message is not equal to the previous message", async () => {
+      const distinct = stream.distinct();
+      const listener = jest.fn();
+      distinct.listen(listener);
+      stream.add(1);
+      stream.add(2);
+      await flush();
+      expect(listener).toHaveBeenCalledTimes(2);
+      expect(listener.mock.calls[0][0]).toBe(1);
+      expect(listener.mock.calls[1][0]).toBe(2);
+    });
+
+    it("accepts a custom 'equals' condition", async () => {
+      const distinct = stream.distinct((a, b) => a?.name === b?.name);
+      const listener = jest.fn();
+      distinct.listen(listener);
+      stream.add({ name: "Vincent", data: "something" });
+      stream.add({ name: "Vincent", data: "anotherthing" });
+      await flush();
+      expect(listener).toHaveBeenCalledTimes(1);
+      expect(listener.mock.calls[0][0]).toEqual({ name: "Vincent", data: "something" });
     });
   });
 
@@ -618,7 +654,7 @@ describe("Stream", () => {
     it("resolves the first element on the stream matching a condition", async () => {
       const cond = (num: number) => num === 5;
       const data = [1, 3, 5, 7, 9];
-      data.forEach(d => stream.add(d));
+      data.forEach((d) => stream.add(d));
       stream.close();
       const result = await stream.firstWhere(cond);
       expect(result).toBe(5);
@@ -763,7 +799,7 @@ describe("Stream", () => {
   describe("toArray", () => {
     it("returns an array containing the messages from the stream", async () => {
       const expected = [1, 2, 3];
-      expected.forEach(n => stream.add(n));
+      expected.forEach((n) => stream.add(n));
       stream.close();
       await flush();
       const result = await stream.toArray();
@@ -788,12 +824,12 @@ describe("Stream", () => {
   describe("toSet", () => {
     it("returns a Set containing the messages from the stream", async () => {
       const expected = [1, 2, 3];
-      expected.forEach(n => stream.add(n));
+      expected.forEach((n) => stream.add(n));
       stream.close();
       await flush();
       const result = await stream.toSet();
       expect(result.size).toBe(expected.length);
-      expected.forEach(n => expect(result.has(n)).toBe(true));
+      expected.forEach((n) => expect(result.has(n)).toBe(true));
     });
 
     it("rejects with the error from the stream on error", async () => {
